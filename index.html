@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e9ede4" />
+    <script>
+      // Apply the saved theme before the app or its styles begin loading.
+      (() => {
+        let preference = "system";
+        try { preference = localStorage.getItem("hightower-theme") || "system"; } catch {}
+        const theme = preference === "light" || preference === "dark"
+          ? preference : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#151c22" : "#e9ede4";
+      })();
+    </script>
+    <style>
+      html { background: #e9ede4; color-scheme: light; }
+      html[data-theme="dark"] { background: #151c22; color-scheme: dark; }
+    </style>
+    <meta
+      name="description"
+      content="A spatial workbench for your bike, its components and maintenance history."
+    />
+    <title>Hightower — Bike workbench</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
