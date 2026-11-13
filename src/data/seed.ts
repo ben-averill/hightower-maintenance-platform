@@ -139,6 +139,7 @@ export function createSeedData(): BikeData {
       cumulativeHours: 153,
       isMock: true,
     },
+    rides: [],
     rules: [
       {
         id: "fork-manufacturer-pending",

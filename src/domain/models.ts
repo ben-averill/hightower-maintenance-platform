@@ -96,6 +96,24 @@ export interface UsageRecord {
   cumulativeHours: number | null;
   isMock: boolean;
 }
+export type RideSource =
+  | { provider: "strava"; activityId: string; gearId: string | null }
+  | { provider: "file"; format: "gpx" | "tcx"; fileName: string };
+export interface Ride {
+  id: string;
+  bikeId: string;
+  name: string;
+  /** UTC start instant (ISO 8601). */
+  startedAt: string;
+  /** Calendar date where the ride happened (YYYY-MM-DD, rider's local time). */
+  localDate: string;
+  elapsedSeconds: number;
+  movingSeconds: number | null;
+  distanceMeters: number | null;
+  elevationMeters: number | null;
+  sportType: string;
+  source: RideSource | null;
+}
 export interface BikeData {
   manufacturers: Manufacturer[];
   models: BikeModel[];
@@ -106,7 +124,12 @@ export interface BikeData {
   instances: ComponentInstance[];
   rules: MaintenanceRule[];
   events: MaintenanceEvent[];
+  /**
+   * Starting meter: bike hours as of `recordedAt`. Rides dated after it add to
+   * it; see `currentUsage` in domain/rides.ts for the effective meter.
+   */
   usage: UsageRecord;
+  rides: Ride[];
 }
 export type MaintenanceStatus =
   "good" | "approaching" | "due" | "overdue" | "unknown";

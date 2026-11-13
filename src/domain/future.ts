@@ -1,4 +1,4 @@
-// Boundary contracts only. Samples and importers do not enter application state yet.
+// Boundary contracts only. Ride lives in models.ts. Samples and importers do not enter application state yet.
 export interface SetupSnapshot {
   id: string;
   bikeId: string;
@@ -9,19 +9,6 @@ export interface SetupSnapshot {
     value: number | string;
     unit: string | null;
   }[];
-}
-export interface Ride {
-  id: string;
-  bikeId: string;
-  startedAt: string;
-  durationSeconds: number;
-  movingSeconds: number | null;
-  distanceMeters: number | null;
-  elevationMeters: number | null;
-  location: string | null;
-  setupSnapshotId: string | null;
-  telemetrySessionId: string | null;
-  notes: string;
 }
 export interface TelemetrySession {
   id: string;

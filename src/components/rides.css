@@ -1,0 +1,47 @@
+/* Rides · Strava panel. Uses the shared design tokens from styles.css. */
+.rides-panel {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle, var(--border));
+}
+.rides-meter { display: flex; flex-direction: column; gap: 4px; margin: 14px 0 4px; }
+.rides-meter strong { font-size: 24px; line-height: 1.1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rides-meter span,
+.rides-hint {
+  font-size: 13px; line-height: 1.45;
+  color: var(--content-secondary, var(--muted));
+}
+.rides-hint { margin: 10px 0; }
+.rides-hint code { font-family: var(--font-mono); font-size: 12px; }
+.rides-meter-edit .service-form { padding-top: 4px; }
+.rides-panel a.primary-button { margin: 12px 0; text-decoration: none; box-sizing: border-box; }
+.rides-sync label {
+  display: flex; flex-direction: column; gap: 6px; margin: 12px 0;
+  font-size: 12px; font-weight: 600; color: var(--content-secondary, var(--muted));
+}
+.rides-sync select {
+  padding: 9px 10px; border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-field, var(--surface-sunken));
+  color: var(--content-primary, var(--ink));
+}
+.rides-sync .primary-button { margin-bottom: 8px; }
+.rides-message,
+.rides-error { margin: 12px 0; padding: 10px 12px; border-radius: 6px; font-size: 13px; background: var(--bg-surface-raised, var(--surface-raised)); }
+.rides-message { color: var(--content-status-good, var(--status-good)); }
+.rides-error { color: var(--content-status-overdue, var(--status-overdue)); }
+.rides-list { list-style: none; margin: 14px 0 0; padding: 0; }
+.rides-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 0; border-top: 1px solid var(--border-subtle, var(--border));
+}
+.rides-list li > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.rides-list strong { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rides-list span { font-size: 12px; color: var(--content-secondary, var(--muted)); font-variant-numeric: tabular-nums; }
+.rides-list li.is-before-meter { opacity: .6; }
+.rides-list .text-button { font-size: 18px; padding: 2px 6px; }
+.rides-panel.is-dragging { outline: 2px dashed var(--border-accent, var(--accent)); outline-offset: 6px; border-radius: 4px; }
+.rides-import { margin: 16px 0 4px; }
+.rides-import .primary-button { margin: 0; }
+.rides-strava { margin-top: 4px; }
+.rides-error { white-space: pre-line; }

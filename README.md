@@ -29,7 +29,11 @@ npm run preview
 5. Choose **Record mock service**, enter work performed, and save. Inspect the new record in **Service history**; matching fork service now calculates 0 / 50 h. An inspection does not reset the service cycle.
 6. Under **Component lifecycle**, install a replacement demo fork. It gets a new identity and a usage baseline of 153 h. In history, select **Include previous components** to inspect the retired fork's retained records.
 
-Everything is local to the current page session. Refreshing restores the seed; nothing is saved to a database or browser storage. All installation dates, usage and history are mock data. The 50-hour interval is a fictional calculation fixture, **not Fox guidance**. Unknown specifications and manufacturer intervals have not been invented. Geometry is a photo-informed procedural approximation with curved frame tubes, low-mounted shock, tread and drivetrain details; it is not a dimensionally accurate Hightower model. Reference branding does not verify the installed parts. Only the fork has service-entry and replacement UI in this first slice.
+Service history, usage and rides are saved in this browser's local storage (**Reset to demo data** clears them); there is no database. All installation dates, usage and history are mock data. The 50-hour interval is a fictional calculation fixture, **not Fox guidance**. Unknown specifications and manufacturer intervals have not been invented. Geometry is a photo-informed procedural approximation with curved frame tubes, low-mounted shock, tread and drivetrain details; it is not a dimensionally accurate Hightower model. Reference branding does not verify the installed parts. Only the fork has service-entry and replacement UI in this first slice.
+
+## Strava rides
+
+Export a ride from Strava as GPX (free) and drop it into **Details › Rides**. Its moving time is added to the bike's hour meter. Optional automatic sync through Strava's API needs a Strava subscription. See [docs/strava.md](docs/strava.md).
 
 ## Architecture
 

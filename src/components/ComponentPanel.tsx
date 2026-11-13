@@ -176,7 +176,7 @@ export function ComponentPanel({
             <span className="usage-icon">◷</span>
             <div>
               <strong>{data.usage.cumulativeHours} riding hours</strong>
-              <p>Mock bike usage · {data.usage.recordedAt}</p>
+              <p>{data.usage.isMock ? "Mock starting meter + rides" : "Bike usage"} · {data.usage.recordedAt}</p>
             </div>
             <span className="mini-label">DEMO</span>
           </div>

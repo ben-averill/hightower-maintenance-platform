@@ -55,7 +55,7 @@ export function BikeOverview({
               <dt>Ride time</dt>
               <dd>
                 {data.usage.cumulativeHours}
-                <span> hours · mock usage</span>
+                <span> hours · {data.usage.isMock ? "mock starting meter + rides" : `as of ${data.usage.recordedAt}`}</span>
               </dd>
             </div>
             <div>
