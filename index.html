@@ -3,22 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#e9ede4" />
+    <meta name="theme-color" content="#043c38" />
     <script>
-      // Apply the saved theme before the app or its styles begin loading.
+      // Apply the saved colorway before the app or its styles begin loading.
+      // Canvas colours mirror src/app/colorways.ts.
       (() => {
-        let preference = "system";
-        try { preference = localStorage.getItem("hightower-theme") || "system"; } catch {}
-        const theme = preference === "light" || preference === "dark"
-          ? preference : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        const canvases = { moss: "#043c38", graphite: "#2e2d2f", "red-rock": "#a44a36", purple: "#3b3342" };
+        let theme = "moss";
+        try { const saved = localStorage.getItem("hightower-theme"); if (saved && Object.hasOwn(canvases, saved)) theme = saved; } catch {}
         document.documentElement.dataset.theme = theme;
-        document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#151c22" : "#e9ede4";
+        document.querySelector('meta[name="theme-color"]').content = canvases[theme];
       })();
     </script>
     <style>
-      html { background: #e9ede4; color-scheme: light; }
-      html[data-theme="dark"] { background: #151c22; color-scheme: dark; }
+      html { background: #043c38; color-scheme: dark; }
+      html[data-theme="graphite"] { background: #2e2d2f; }
+      html[data-theme="red-rock"] { background: #a44a36; }
+      html[data-theme="purple"] { background: #3b3342; }
     </style>
+    <!-- Figtree stands in for Proxima Nova until it is licensed. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800&display=swap" />
     <meta
       name="description"
       content="A spatial workbench for your bike, its components and maintenance history."

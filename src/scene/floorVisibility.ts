@@ -1,4 +1,4 @@
-// Fade before the horizontal view so the grid never cuts across the bike
+// Fade before the horizontal view so ground shadows never cut across the bike
 // during an underside inspection. Angles are relative to the camera target.
 export function floorOpacity(elevation: number): number {
   const start = 8 * Math.PI / 180;

@@ -21,7 +21,7 @@ import { forkDecalGeometry, forkDecalTexture } from "./forkDecal";
 import { forkArchGeometry } from "./forkArchGeometry";
 import { shockDecalGeometry, shockDecalTexture } from "./shockDecal";
 import { tireDecalGeometry, tireDecalTexture } from "./tireDecal";
-import { FadedMaterial } from "./sceneAppearance";
+import { FadedMaterial,usePaint,usePaintFinish } from "./sceneAppearance";
 import { drawSantaCruzWordmark } from "./santaCruzWordmark";
 import { surfaceShellGeometry } from "./surfaceShell";
 import { drawHightowerWordmark } from "./hightowerWordmark";
@@ -66,6 +66,7 @@ function Decal({
   shape: Extract<Primitive, { kind: "label" }>;
   faded: boolean;
 }) {
+  const color = usePaint(shape.color);
   const orientation = useMemo(() => {
     if (!shape.basis) return undefined;
     const right = new Vector3(...shape.basis.right).normalize();
@@ -79,13 +80,13 @@ function Decal({
     canvas.height = shape.artwork ? Math.round(1024*shape.height/shape.width) : 128;
     const context = canvas.getContext("2d")!;
     context.font = "italic 900 100px Arial, sans-serif";
-    context.fillStyle = shape.color;
+    context.fillStyle = color;
     context.textAlign = "center";
     context.textBaseline = "middle";
     if (shape.artwork === "santa-cruz" || shape.artwork === "santa-cruz-stacked") {
       drawSantaCruzWordmark(context,canvas.width,canvas.height,shape.artwork==="santa-cruz-stacked");
     } else if(shape.artwork === "hightower") {
-      drawHightowerWordmark(context,canvas.width,canvas.height,shape.color);
+      drawHightowerWordmark(context,canvas.width,canvas.height,color);
     } else if (shape.fitText) {
       context.translate(512, 0);
       context.scale(920 / Math.max(1, context.measureText(shape.text).width), 1);
@@ -94,7 +95,7 @@ function Decal({
     const result = new CanvasTexture(canvas);
     result.colorSpace = SRGBColorSpace;
     return result;
-  }, [shape]);
+  }, [shape, color]);
   useEffect(() => () => texture.dispose(), [texture]);
   const decalGeometry=useMemo(()=>{
     const alongX=shape.curvatureAxis === "x";
@@ -144,6 +145,8 @@ function PrimitiveMesh({
   statusColor?: string;
 }) {
   const instances = useRef<InstancedMesh>(null);
+  const color = usePaint(shape.color);
+  const finish = usePaintFinish(shape.color);
   const transform = useMemo(() => {
     if (shape.kind !== "tube" && shape.kind !== "sleeve") return null;
     const from = new Vector3(...shape.from),
@@ -191,12 +194,12 @@ function PrimitiveMesh({
   }, [shape]);
   const material = faded ? <FadedMaterial/> : (
     <meshPhysicalMaterial
-      color={statusColor ?? shape.color}
+      color={statusColor ?? color}
       vertexColors={shape.kind === "profile" && !!shape.headSection?.boreRadius}
-      roughness={shape.roughness ?? 0.38}
-      metalness={shape.metalness ?? 0.3}
-      clearcoat={shape.kind === "profile" ? 0.35 : 0}
-      clearcoatRoughness={0.22}
+      roughness={finish?.roughness ?? shape.roughness ?? 0.38}
+      metalness={finish?.metalness ?? shape.metalness ?? 0.3}
+      clearcoat={finish?.clearcoat ?? (shape.kind === "profile" ? 0.35 : 0)}
+      clearcoatRoughness={finish?.clearcoatRoughness ?? 0.22}
     />
   );
   if (shape.kind === "fork-decal") return <ForkDecal shape={shape} faded={faded} />;

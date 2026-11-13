@@ -2,7 +2,7 @@ import {advanceSuspensionPlayback,initialSuspensionPlayback} from "../scene/susp
 import {suspensionTravel as travelLimits} from "../scene/suspensionMotion";
 import type {BrakeEnd} from "../scene/brakeGeometry";
 import type {FrameInspection,InspectionAngle} from "../scene/frameInspection";
-import type {ResolvedTheme,ThemePreference} from "../app/useTheme";
+import {colorways,type ColorwayId} from "../app/colorways";
 import {lazy,Suspense,useEffect,useReducer,useRef,useState,type ReactNode} from "react";
 import type {BikeData,CategoryId,MaintenanceStatus} from "../domain/models";
 import {statusLabels} from "../domain/maintenance";
@@ -10,9 +10,9 @@ import {SceneBoundary} from "./SceneBoundary";
 import {categorySymbols} from "./categorySymbols";
 const BikeScene=lazy(()=>import("../scene/BikeScene"));
 
-export function BikeViewport({theme,preference,onThemeChange,data,category,selectedSlotId,frameInspection,
+export function BikeViewport({colorway,onColorwayChange,data,category,selectedSlotId,frameInspection,
   setFrameInspection,statuses,demo,controlsVisible,detailsControl,controlsToggle,onBrowse,selectCategory,selectComponent}:{
-  theme:ResolvedTheme;preference:ThemePreference;onThemeChange:(value:ThemePreference)=>void;
+  colorway:ColorwayId;onColorwayChange:(value:ColorwayId)=>void;
   data:BikeData;category:CategoryId|null;selectedSlotId:string|null;frameInspection:FrameInspection;
   setFrameInspection:(view:FrameInspection)=>void;statuses:Record<string,MaintenanceStatus>;demo:boolean;
   controlsVisible:boolean;detailsControl:ReactNode;controlsToggle:ReactNode;onBrowse:()=>void;
@@ -78,7 +78,7 @@ export function BikeViewport({theme,preference,onThemeChange,data,category,selec
   return <section className="viewer" aria-label="Interactive bike workbench">
     <div className="canvas-area">
       <SceneBoundary><Suspense fallback={<div className="canvas-fallback">Preparing your workbench…</div>}>
-        <BikeScene theme={theme} suspensionTravel={suspensionTravel} cassetteAngle={travelMotion.cassetteAngle}
+        <BikeScene colorway={colorway}suspensionTravel={suspensionTravel} cassetteAngle={travelMotion.cassetteAngle}
           slots={data.slots} category={category} selectedSlotId={selectedSlotId} isolate={isolate} showStatus={showStatus}
           statuses={statuses} onSelect={chooseComponent} resetVersion={resetVersion} frontView={frontView}
           brakeView={brakeView} frameInspection={frameInspection} inspectionAngle={inspectionAngle}/>
@@ -136,9 +136,9 @@ export function BikeViewport({theme,preference,onThemeChange,data,category,selec
           <span>Front <strong>{(travelLimits.front*suspensionTravel/100).toFixed(1)} / {travelLimits.front} mm</strong></span></div>
       </div>
       <div id="workbench-options" className="dock-options" hidden={!controlsVisible||activeTool!=="options"}>
-        <div className="dock-options-row"><label>Theme <select aria-label="Color theme" value={preference}
-          onChange={event=>onThemeChange(event.target.value as ThemePreference)}>
-          <option value="system">System theme</option><option value="light">Light</option><option value="dark">Dark</option>
+        <div className="dock-options-row"><label>Colorway <select aria-label="Colorway" value={colorway}
+          onChange={event=>onColorwayChange(event.target.value as ColorwayId)}>
+          {Object.values(colorways).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}
         </select></label><button aria-pressed={showStatus} onClick={()=>setShowStatus(value=>!value)}>Service colors</button>
           <details className="dock-about"><summary>About this prototype</summary>
             <p>Medium / Low geometry with estimated frame surfaces. Usage and service history are mock data. Edits reset on refresh; service intervals await verification.</p>

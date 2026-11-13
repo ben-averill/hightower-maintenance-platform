@@ -1,10 +1,10 @@
 import { brakePose, type BrakeEnd } from "./brakeGeometry";
-import { sceneScale } from "./geometry";
+import { geometryAnchors, sceneScale } from "./geometry";
 import { visibleInInspection, type FrameInspection, type InspectionAngle } from "./frameInspection";
 import { useEffect, useMemo, useRef, type ComponentRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { PMREMGenerator, Vector3, type Group, type GridHelper, type ShadowMaterial } from "three";
+import { CanvasTexture, PMREMGenerator, Vector3, type Group, type MeshBasicMaterial } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type {
   ComponentSlot,
@@ -13,10 +13,12 @@ import type {
 } from "../domain/models";
 import { proceduralModel } from "./model";
 import {SuspensionParts} from "./SuspensionRig";
-import {suspensionPose} from "./suspensionMotion";
-import { FadeColorContext,scenePalette } from "./sceneAppearance";
+import {movePoint,suspensionPose,type SuspensionPose} from "./suspensionMotion";
+import { ColorwayContext } from "./sceneAppearance";
 import { floorOpacity } from "./floorVisibility";
-import type { ResolvedTheme } from "../app/useTheme";
+import { colorways,type ColorwayId } from "../app/colorways";
+
+const { rear, front } = geometryAnchors();
 
 export const statusColors: Record<MaintenanceStatus, string> = {
   unknown: "#86958e",
@@ -26,7 +28,7 @@ export const statusColors: Record<MaintenanceStatus, string> = {
   overdue: "#d85a4e",
 };
 interface Props {
-  theme: ResolvedTheme;
+  colorway: ColorwayId;
   suspensionTravel: number;
   cassetteAngle: number;
   slots: ComponentSlot[];
@@ -62,35 +64,55 @@ function StudioReflections() {
   }, [gl, scene]);
   return null;
 }
-function StudioFloor({ theme }: { theme: ResolvedTheme }) {
+// Soft contact shadows under each tyre, like a product shot. They follow the
+// contact patches through suspension travel and fade out before the camera
+// drops to floor level, so they never hang in the air below the bike.
+function contactShadowTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 128;
+  const context = canvas.getContext("2d")!;
+  const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64);
+  // Alpha maps read the green channel: white is solid shadow, black is none.
+  gradient.addColorStop(0, "#ffffff");
+  gradient.addColorStop(0.35, "#b3b3b3");
+  gradient.addColorStop(1, "#000000");
+  context.fillStyle = "#000000";
+  context.fillRect(0, 0, 128, 128);
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 128, 128);
+  return new CanvasTexture(canvas);
+}
+function WheelShadows({ pose }: { pose: SuspensionPose }) {
   const group = useRef<Group>(null);
-  const grid = useRef<GridHelper>(null);
-  const shadow = useRef<ShadowMaterial>(null);
+  const materials = useRef<(MeshBasicMaterial | null)[]>([]);
   const direction = useRef(new Vector3());
+  const texture = useMemo(contactShadowTexture, []);
+  useEffect(() => () => texture.dispose(), [texture]);
+  const rearX = rear[0], frontX = movePoint(movePoint(front, pose.fork), pose.ground)[0];
+  // A tight, dark patch under each tyre plus a faint pool across the wheelbase.
+  const contacts = [
+    { x: rearX, length: 0.95, depth: 0.42, strength: 0.78 },
+    { x: frontX, length: 0.95, depth: 0.42, strength: 0.78 },
+    { x: (rearX + frontX) / 2, length: (frontX - rearX) * sceneScale + 1.2, depth: 0.7, strength: 0.3 },
+  ];
   useFrame(({ camera }) => {
     camera.getWorldDirection(direction.current);
     const opacity = floorOpacity(Math.asin(-direction.current.y));
     if (group.current) group.current.visible = opacity > 0;
-    if (shadow.current) shadow.current.opacity = 0.12 * opacity;
-    if (grid.current) {
-      const materials = Array.isArray(grid.current.material)
-        ? grid.current.material : [grid.current.material];
-      for (const material of materials) material.opacity = opacity;
-    }
+    materials.current.forEach((material, index) => {
+      if (material) material.opacity = contacts[index]!.strength * opacity;
+    });
   });
   return (
-    <group ref={group} name="studio-floor">
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.018, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
-        <shadowMaterial ref={shadow} transparent opacity={0.12} depthWrite={false} />
-      </mesh>
-      <gridHelper
-        ref={grid}
-        args={[20, 80, theme === "dark" ? "#34424a" : "#cdd5c7", theme === "dark" ? "#26323a" : "#dbe1d5"]}
-        position={[0, -0.02, 0]}
-        material-transparent
-        material-depthWrite={false}
-      />
+    <group ref={group} name="wheel-shadows">
+      {contacts.map((contact, index) => (
+        <mesh key={index} rotation={[-Math.PI / 2, 0, 0]} position={[contact.x * sceneScale, 0.001 + index * 0.0005, 0]}
+          scale={[contact.length, contact.depth, 1]} renderOrder={-1}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial ref={material => { materials.current[index] = material; }} color="#000000"
+            alphaMap={texture} transparent opacity={contact.strength} depthWrite={false} toneMapped={false} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -137,10 +159,10 @@ function Controls({ resetVersion, frontView, brakeView, frameInspection, inspect
 export default function BikeScene(props: Props) {
   const { category, selectedSlotId, isolate, showStatus, statuses, onSelect } =
     props;
+  const colorway=colorways[props.colorway];
   const travel=useMemo(()=>suspensionPose(props.suspensionTravel,props.cassetteAngle),[props.suspensionTravel,props.cassetteAngle]);
   return (
     <Canvas
-      shadows
       dpr={[1, 1.6]}
       camera={{ position: [1.7, 1.75, 4.8], fov: 30 }}
       fallback={
@@ -149,7 +171,7 @@ export default function BikeScene(props: Props) {
         </div>
       }
     >
-      <color attach="background" args={[scenePalette[props.theme].background]} />
+      <color attach="background" args={[colorway.canvas]} />
       <StudioReflections />
       <ambientLight intensity={0.6} />
       <hemisphereLight args={["#ffffff", "#9aa88d", 1.15]} />
@@ -161,11 +183,8 @@ export default function BikeScene(props: Props) {
       <directionalLight
         position={[1, 5, 3]}
         intensity={2.5}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-normalBias={0.005}
       />
-      <FadeColorContext.Provider value={scenePalette[props.theme].faded}><group name="suspension-bike"
+      <ColorwayContext.Provider value={colorway}><group name="suspension-bike"
         position={travel.ground.offset.map(v=>v*sceneScale) as [number,number,number]} rotation={[0,0,travel.ground.angle]}>
         {proceduralModel.map((binding) => {
           const slot = props.slots.find((item) => item.id === binding.slotId);
@@ -193,8 +212,8 @@ export default function BikeScene(props: Props) {
             </group>
           );
         })}
-      </group></FadeColorContext.Provider>
-      <StudioFloor theme={props.theme} />
+      </group></ColorwayContext.Provider>
+      <WheelShadows pose={travel} />
       <Controls resetVersion={props.resetVersion} frontView={props.frontView} brakeView={props.brakeView} frameInspection={props.frameInspection} inspectionAngle={props.inspectionAngle} />
     </Canvas>
   );

@@ -1,23 +1,16 @@
 import { useEffect,useLayoutEffect,useState } from "react";
-export type ThemePreference="system"|"light"|"dark";
-export type ResolvedTheme="light"|"dark";
+import { colorways,defaultColorway,isColorway,type ColorwayId } from "./colorways";
 const key="hightower-theme";
 export function useTheme() {
-  const [preference,setPreference]=useState<ThemePreference>(()=>{
-    try {const value=localStorage.getItem(key);return value==="light"||value==="dark"?value:"system";} catch {return "system";}
+  // Earlier builds stored light/dark/system; anything unrecognised falls back to Moss.
+  const [colorway,setColorway]=useState<ColorwayId>(()=>{
+    try {const value=localStorage.getItem(key);return isColorway(value)?value:defaultColorway;} catch {return defaultColorway;}
   });
-  const [systemDark,setSystemDark]=useState(()=>window.matchMedia("(prefers-color-scheme: dark)").matches);
-  useEffect(()=>{
-    const query=window.matchMedia("(prefers-color-scheme: dark)");
-    const update=()=>setSystemDark(query.matches);update();query.addEventListener("change",update);
-    return ()=>query.removeEventListener("change",update);
-  },[]);
-  const theme:ResolvedTheme=preference==="system"?(systemDark?"dark":"light"):preference;
   useLayoutEffect(()=>{
-    document.documentElement.dataset.theme=theme;
+    document.documentElement.dataset.theme=colorway;
     const meta=document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    if(meta) meta.content=theme==="dark"?"#151c22":"#e9ede4";
-  },[theme]);
-  useEffect(()=>{try {localStorage.setItem(key,preference);} catch { /* A blocked store still permits session theme changes. */ }},[preference]);
-  return {preference,setPreference,theme};
+    if(meta) meta.content=colorways[colorway].canvas;
+  },[colorway]);
+  useEffect(()=>{try {localStorage.setItem(key,colorway);} catch { /* A blocked store still permits session theme changes. */ }},[colorway]);
+  return {colorway,setColorway};
 }
