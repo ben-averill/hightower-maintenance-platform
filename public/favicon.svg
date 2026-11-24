@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Moss frame paint and logo yellow (src/app/colorways.ts); H glyph from src/scene/hightowerWordmark.ts. -->
+  <rect width="32" height="32" rx="6" fill="#063f48"/>
+  <path transform="translate(8.8 7) scale(1.8)" fill="#edff16" d="M0 0H2.2V3.9H5.8V0H8V10H5.8V6.1H2.2V10H0Z"/>
+</svg>

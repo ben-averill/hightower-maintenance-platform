@@ -1,5 +1,6 @@
 import { useEffect,useLayoutEffect,useState } from "react";
 import { colorways,defaultColorway,isColorway,type ColorwayId } from "./colorways";
+import { faviconHref } from "./favicon";
 const key="hightower-theme";
 export function useTheme() {
   // Earlier builds stored light/dark/system; anything unrecognised falls back to Moss.
@@ -10,6 +11,8 @@ export function useTheme() {
     document.documentElement.dataset.theme=colorway;
     const meta=document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if(meta) meta.content=colorways[colorway].canvas;
+    const icon=document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if(icon) icon.href=faviconHref(colorways[colorway]);
   },[colorway]);
   useEffect(()=>{try {localStorage.setItem(key,colorway);} catch { /* A blocked store still permits session theme changes. */ }},[colorway]);
   return {colorway,setColorway};
