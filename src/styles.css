@@ -1,44 +1,46 @@
 /* Hightower Workbench. Dark-only, themed by the bike's four factory colorways.
    Tokens are named for what they colour:
-     --bg-*       fills behind content. Canvas (the frame colour) is the darkest
-                  layer; field, surface and surface-raised each step lighter.
+     --bg-*       fills behind content. Canvas is the studio backdrop, sampled
+                  from Santa Cruz's product page for each colorway; panels are
+                  dark glass on a fixed lightness ladder (field, surface,
+                  surface-raised), tinted toward the frame hue.
      --content-*  text and icons.
      --border-*   dividers, outlines and focus rings.
-   Accent comes from the frame's logo, toned down for interface use.
+   Accent comes from the frame's logo, toned for interface use.
    Values mirror the design system tokens. */
 :root,
 :root[data-theme="moss"] {
-  --bg-canvas: #043c38; --bg-field: #1a413e; --bg-surface: #224946; --bg-surface-raised: #315854;
-  --bg-surface-overlay: rgba(34, 73, 70, .92);
+  --bg-canvas: #14373e; --bg-field: #1e4047; --bg-surface: #25474e; --bg-surface-raised: #33565d;
+  --bg-surface-overlay: rgba(37, 71, 78, .92);
   --bg-accent: #d5df54;
-  --content-primary: #ebf6f5; --content-secondary: #c0d7d4;
-  --content-accent: #d5df54; --content-on-accent: #031a18;
-  --border-subtle: #3a615d; --border-strong: #668581; --border-accent: #d5df54;
+  --content-primary: #ebf6f8; --content-secondary: #bfd6db;
+  --content-accent: #d5df54; --content-on-accent: #031a1e;
+  --border-subtle: #3c5e66; --border-strong: #678389; --border-accent: #d5df54;
 }
 :root[data-theme="graphite"] {
-  --bg-canvas: #2e2d2f; --bg-field: #343335; --bg-surface: #3c3b3d; --bg-surface-raised: #4b494c;
-  --bg-surface-overlay: rgba(60, 59, 61, .92);
+  --bg-canvas: #414141; --bg-field: #2e2e2e; --bg-surface: #343434; --bg-surface-raised: #424242;
+  --bg-surface-overlay: rgba(52, 52, 52, .92);
   --bg-accent: #a3d2ad;
-  --content-primary: #f4f3f5; --content-secondary: #d1d0d3;
-  --content-accent: #a3d2ad; --content-on-accent: #161617;
-  --border-subtle: #535254; --border-strong: #777678; --border-accent: #a3d2ad;
+  --content-primary: #f3f3f3; --content-secondary: #d1d1d1;
+  --content-accent: #a3d2ad; --content-on-accent: #161616;
+  --border-subtle: #4a4a4a; --border-strong: #6f6f6f; --border-accent: #a3d2ad;
 }
 :root[data-theme="red-rock"] {
-  --bg-canvas: #a44a36; --bg-field: #51332c; --bg-surface: #593b34; --bg-surface-raised: #694a42;
-  --bg-surface-overlay: rgba(89, 59, 52, .92);
+  --bg-canvas: #9c4630; --bg-field: #4f322b; --bg-surface: #563831; --bg-surface-raised: #66473f;
+  --bg-surface-overlay: rgba(86, 56, 49, .92);
   --bg-accent: #fba58a;
   --content-primary: #fbf1ee; --content-secondary: #e1ccc6;
   --content-accent: #fba58a; --content-on-accent: #22110d;
-  --content-on-canvas-secondary: #f5e6e2; /* #e1ccc6 is only 3.8:1 on the bright paint */
-  --border-subtle: #72524a; --border-strong: #947972; --border-accent: #fba58a;
+  --content-on-canvas-secondary: #f5e6e2; /* #e1ccc6 is only 3.7:1 on the bright backdrop */
+  --border-subtle: #6f4f47; --border-strong: #91766f; --border-accent: #fba58a;
 }
 :root[data-theme="purple"] {
-  --bg-canvas: #3b3342; --bg-field: #423949; --bg-surface: #4a4151; --bg-surface-raised: #595060;
-  --bg-surface-overlay: rgba(74, 65, 81, .92);
-  --bg-accent: #f2c49a;
-  --content-primary: #f6f1fa; --content-secondary: #d6cdde;
-  --content-accent: #f2c49a; --content-on-accent: #1a1220;
-  --border-subtle: #615869; --border-strong: #867e8c; --border-accent: #f2c49a;
+  --bg-canvas: #342d3f; --bg-field: #3e3749; --bg-surface: #443d50; --bg-surface-raised: #534c5f;
+  --bg-surface-overlay: rgba(68, 61, 80, .92);
+  --bg-accent: #fcc18a;
+  --content-primary: #f5f2fa; --content-secondary: #d4cddf;
+  --content-accent: #fcc18a; --content-on-accent: #191321;
+  --border-subtle: #5b5468; --border-strong: #807a8b; --border-accent: #fcc18a;
 }
 :root {
   color-scheme: dark;
@@ -87,7 +89,13 @@ h4 { font-size: 15px; line-height: 1.35; font-weight: 600; margin: 8px 0; }
 .immersive-workbench { position: relative; width: 100%; height: 100dvh; overflow: hidden; }
 .immersive-workbench main { position: absolute; inset: 0; }
 .viewer { position: absolute; inset: 0; }
-.canvas-area { position: absolute; inset: 0; }
+/* The WebGL canvas is transparent: the backdrop is CSS, with a soft vignette
+   like a studio sweep. The floor's pool of light is drawn in 3D so it stays
+   under the bike as the camera orbits. */
+.canvas-area {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 85% 75% at 50% 48%, transparent 55%, rgb(0 0 0 / .14)), var(--bg-canvas);
+}
 .canvas-area > div:first-child { position: absolute !important; inset: 0; }
 .canvas-area canvas { touch-action: none; }
 .canvas-fallback {

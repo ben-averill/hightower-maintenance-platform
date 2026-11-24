@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#043c38" />
+    <meta name="theme-color" content="#14373e" />
     <script>
       // Apply the saved colorway before the app or its styles begin loading.
       // Canvas colours mirror src/app/colorways.ts.
       (() => {
-        const canvases = { moss: "#043c38", graphite: "#2e2d2f", "red-rock": "#a44a36", purple: "#3b3342" };
+        const canvases = { moss: "#14373e", graphite: "#414141", "red-rock": "#9c4630", purple: "#342d3f" };
         let theme = "moss";
         try { const saved = localStorage.getItem("hightower-theme"); if (saved && Object.hasOwn(canvases, saved)) theme = saved; } catch {}
         document.documentElement.dataset.theme = theme;
@@ -16,10 +16,10 @@
       })();
     </script>
     <style>
-      html { background: #043c38; color-scheme: dark; }
-      html[data-theme="graphite"] { background: #2e2d2f; }
-      html[data-theme="red-rock"] { background: #a44a36; }
-      html[data-theme="purple"] { background: #3b3342; }
+      html { background: #14373e; color-scheme: dark; }
+      html[data-theme="graphite"] { background: #414141; }
+      html[data-theme="red-rock"] { background: #9c4630; }
+      html[data-theme="purple"] { background: #342d3f; }
     </style>
     <!-- Figtree stands in for Proxima Nova until it is licensed. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

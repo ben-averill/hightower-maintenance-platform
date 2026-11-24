@@ -3,9 +3,8 @@ import { geometryAnchors, sceneScale } from "./geometry";
 import { visibleInInspection, type FrameInspection, type InspectionAngle } from "./frameInspection";
 import { useEffect, useMemo, useRef, type ComponentRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import { CanvasTexture, PMREMGenerator, Vector3, type Group, type MeshBasicMaterial } from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { Environment, Lightformer, OrbitControls } from "@react-three/drei";
+import { CanvasTexture, Vector3, type Group, type MeshBasicMaterial } from "three";
 import type {
   ComponentSlot,
   MaintenanceStatus,
@@ -44,73 +43,83 @@ interface Props {
   frameInspection: FrameInspection;
   inspectionAngle: InspectionAngle;
 }
-function StudioReflections() {
-  const { gl, scene } = useThree();
-  useEffect(() => {
-    const previous = scene.environment;
-    const previousIntensity = scene.environmentIntensity;
-    const room = new RoomEnvironment();
-    const generator = new PMREMGenerator(gl);
-    const environment = generator.fromScene(room, 0.04);
-    scene.environment = environment.texture;
-    scene.environmentIntensity = 0.5;
-    room.dispose();
-    generator.dispose();
-    return () => {
-      scene.environment = previous;
-      scene.environmentIntensity = previousIntensity;
-      environment.dispose();
-    };
-  }, [gl, scene]);
-  return null;
+// A dark photo studio lit by a long softbox overhead, as in Santa Cruz's
+// product shots. Glossy and metallic paint reflect it as a bright streak along
+// the top of each tube, while the undersides fall away into shadow. Low strips
+// at the sides and back keep the dark side of the bike from going flat black.
+function StudioLighting() {
+  return (
+    <Environment resolution={512} frames={1} environmentIntensity={1}>
+      {/* A wide diffuser over the whole set: its edges sit low enough that
+          tubes seen from bike height still catch it along their tops. */}
+      <Lightformer form="rect" intensity={3} position={[0, 4.5, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[18, 16, 1]} />
+      {/* The brighter core of the softbox, running the length of the bike. */}
+      <Lightformer form="rect" intensity={30} position={[0, 5, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[10, 3, 1]} />
+      {/* Narrow strips along the front and back edges of the softbox: these
+          draw the crisp white lines along the tops of the tubes. */}
+      <Lightformer form="rect" intensity={24} position={[0, 4, 3.4]} target={[0, 1, 0]} scale={[10, 0.6, 1]} />
+      <Lightformer form="rect" intensity={24} position={[0, 4, -3.4]} target={[0, 1, 0]} scale={[10, 0.6, 1]} />
+      <Lightformer form="rect" intensity={0.35} position={[0, 1.5, 8]} rotation={[0, Math.PI, 0]} scale={[14, 2, 1]} />
+      <Lightformer form="rect" intensity={0.35} position={[0, 1.5, -8]} scale={[14, 2, 1]} />
+      <Lightformer form="rect" intensity={0.2} position={[-9, 1.5, 0]} rotation={[0, Math.PI / 2, 0]} scale={[10, 2, 1]} />
+      <Lightformer form="rect" intensity={0.2} position={[9, 1.5, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[10, 2, 1]} />
+    </Environment>
+  );
 }
-// Soft contact shadows under each tyre, like a product shot. They follow the
-// contact patches through suspension travel and fade out before the camera
-// drops to floor level, so they never hang in the air below the bike.
-function contactShadowTexture() {
+// The studio floor, like a product shot: a broad pool of light under the bike
+// and soft contact shadows under each tyre. Both follow the contact patches
+// through suspension travel and fade out before the camera drops to floor
+// level, so nothing hangs in the air below the bike.
+function radialAlphaTexture(stops: [number, number][]) {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 128;
   const context = canvas.getContext("2d")!;
   const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64);
-  // Alpha maps read the green channel: white is solid shadow, black is none.
-  gradient.addColorStop(0, "#ffffff");
-  gradient.addColorStop(0.35, "#b3b3b3");
-  gradient.addColorStop(1, "#000000");
+  // Alpha maps read the green channel: white is opaque, black is clear.
+  for (const [at, alpha] of stops) {
+    const level = Math.round(alpha * 255);
+    gradient.addColorStop(at, `rgb(${level},${level},${level})`);
+  }
   context.fillStyle = "#000000";
   context.fillRect(0, 0, 128, 128);
   context.fillStyle = gradient;
   context.fillRect(0, 0, 128, 128);
   return new CanvasTexture(canvas);
 }
-function WheelShadows({ pose }: { pose: SuspensionPose }) {
+function StudioFloor({ pose, glow }: { pose: SuspensionPose; glow: string }) {
   const group = useRef<Group>(null);
   const materials = useRef<(MeshBasicMaterial | null)[]>([]);
   const direction = useRef(new Vector3());
-  const texture = useMemo(contactShadowTexture, []);
-  useEffect(() => () => texture.dispose(), [texture]);
-  const rearX = rear[0], frontX = movePoint(movePoint(front, pose.fork), pose.ground)[0];
-  // A tight, dark patch under each tyre plus a faint pool across the wheelbase.
-  const contacts = [
-    { x: rearX, length: 0.95, depth: 0.42, strength: 0.78 },
-    { x: frontX, length: 0.95, depth: 0.42, strength: 0.78 },
-    { x: (rearX + frontX) / 2, length: (frontX - rearX) * sceneScale + 1.2, depth: 0.7, strength: 0.3 },
+  const textures = useMemo(() => ({
+    shadow: radialAlphaTexture([[0, 1], [0.35, 0.7], [1, 0]]),
+    light: radialAlphaTexture([[0, 1], [0.3, 0.8], [0.6, 0.35], [1, 0]]),
+  }), []);
+  useEffect(() => () => { textures.shadow.dispose(); textures.light.dispose(); }, [textures]);
+  const rearX = rear[0] * sceneScale, frontX = movePoint(movePoint(front, pose.fork), pose.ground)[0] * sceneScale;
+  const middle = (rearX + frontX) / 2, wheelbase = frontX - rearX;
+  const layers = [
+    // Pool of light, a little behind the bike so it rises around the wheels.
+    { x: middle, z: -0.25, length: wheelbase * 2.6, depth: 3.6, strength: 1, color: glow, texture: textures.light },
+    { x: middle, z: 0, length: wheelbase + 1.2, depth: 0.7, strength: 0.3, color: "#000000", texture: textures.shadow },
+    { x: rearX, z: 0, length: 0.95, depth: 0.42, strength: 0.78, color: "#000000", texture: textures.shadow },
+    { x: frontX, z: 0, length: 0.95, depth: 0.42, strength: 0.78, color: "#000000", texture: textures.shadow },
   ];
   useFrame(({ camera }) => {
     camera.getWorldDirection(direction.current);
     const opacity = floorOpacity(Math.asin(-direction.current.y));
     if (group.current) group.current.visible = opacity > 0;
     materials.current.forEach((material, index) => {
-      if (material) material.opacity = contacts[index]!.strength * opacity;
+      if (material) material.opacity = layers[index]!.strength * opacity;
     });
   });
   return (
-    <group ref={group} name="wheel-shadows">
-      {contacts.map((contact, index) => (
-        <mesh key={index} rotation={[-Math.PI / 2, 0, 0]} position={[contact.x * sceneScale, 0.001 + index * 0.0005, 0]}
-          scale={[contact.length, contact.depth, 1]} renderOrder={-1}>
+    <group ref={group} name="studio-floor">
+      {layers.map((layer, index) => (
+        <mesh key={index} rotation={[-Math.PI / 2, 0, 0]} position={[layer.x, 0.001 + index * 0.0005, layer.z]}
+          scale={[layer.length, layer.depth, 1]} renderOrder={-2 + index}>
           <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial ref={material => { materials.current[index] = material; }} color="#000000"
-            alphaMap={texture} transparent opacity={contact.strength} depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial ref={material => { materials.current[index] = material; }} color={layer.color}
+            alphaMap={layer.texture} transparent opacity={layer.strength} depthWrite={false} toneMapped={false} />
         </mesh>
       ))}
     </group>
@@ -171,19 +180,12 @@ export default function BikeScene(props: Props) {
         </div>
       }
     >
-      <color attach="background" args={[colorway.canvas]} />
-      <StudioReflections />
-      <ambientLight intensity={0.6} />
-      <hemisphereLight args={["#ffffff", "#9aa88d", 1.15]} />
-      <directionalLight
-        position={[-3, 3, -4]}
-        intensity={1.2}
-        color="#c8dfec"
-      />
-      <directionalLight
-        position={[1, 5, 3]}
-        intensity={2.5}
-      />
+      <StudioLighting />
+      <ambientLight intensity={0.3} />
+      <hemisphereLight args={["#ffffff", "#3a3a3a", 0.8]} />
+      <directionalLight position={[-3, 3, -4]} intensity={0.9} color="#c8dfec" />
+      {/* Key light from the overhead softbox. */}
+      <directionalLight position={[0.6, 6, 1.6]} intensity={2.6} />
       <ColorwayContext.Provider value={colorway}><group name="suspension-bike"
         position={travel.ground.offset.map(v=>v*sceneScale) as [number,number,number]} rotation={[0,0,travel.ground.angle]}>
         {proceduralModel.map((binding) => {
@@ -213,7 +215,7 @@ export default function BikeScene(props: Props) {
           );
         })}
       </group></ColorwayContext.Provider>
-      <WheelShadows pose={travel} />
+      <StudioFloor pose={travel} glow={colorway.glow} />
       <Controls resetVersion={props.resetVersion} frontView={props.frontView} brakeView={props.brakeView} frameInspection={props.frameInspection} inspectionAngle={props.inspectionAngle} />
     </Canvas>
   );

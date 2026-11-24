@@ -19,8 +19,10 @@ const { rear, front, wheelRadius } = geometryAnchors("low");
 const rubber = "#171a1b", black = "#11181b";
 const { seat } = frameAnchors;
 const post = (length: number): Point => add(seat, seatAxis[0] * length, seatAxis[1] * length);
-// Keep the riding saddle height as the traced collar moves; shorten the exposed post.
-const postExtension=(barCenter[1]-34-seat[1])/seatAxis[1];
+// Saddle height matches Santa Cruz's product shots: rails roughly level with the
+// bar. The extra height comes from a longer-travel dropper (a longer stanchion),
+// not from pulling the post further out of the frame; the outer tube stays 120 mm.
+const postExtension=(barCenter[1]+26-seat[1])/seatAxis[1];
 const saddle = post(postExtension);
 
 function dropperParts():Primitive[] {

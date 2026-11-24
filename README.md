@@ -45,7 +45,7 @@ Export a ride from Strava as GPX (free) and drop it into **Details › Rides**. 
 - `src/scene`: procedural asset and presentation, independent of service logic.
 - `src/app` and `src/components`: state coordination and HTML controls.
 
-Verification completed: strict TypeScript and production build pass; all 42 domain tests pass. Browser checks covered direct 3D fork picking, assembly selection, isolation, orbit/reset, the 33/50-hour demo, service recording and reset to 0/50, and replacement with retained history. Desktop and narrow layouts were inspected. The installed dependency audit reports zero vulnerabilities.
+Verification completed: strict TypeScript and production build pass; 190 automated tests cover the domain model, ride import and 3D geometry. Browser checks covered direct 3D fork picking, assembly selection, isolation, orbit/reset, the 33/50-hour demo, service recording and reset to 0/50, and replacement with retained history. Desktop and narrow layouts were inspected. The installed dependency audit reports zero vulnerabilities.
 
 ## Next five steps
 

@@ -12,8 +12,11 @@ export function usePaint(color:string) {
 }
 
 const finishes:Record<PaintFinish,{roughness:number;metalness:number;clearcoat:number;clearcoatRoughness:number}>={
-  gloss:{roughness:.3,metalness:.08,clearcoat:1,clearcoatRoughness:.05},
+  // Mirror-like clear coat over a smooth base: highlights stay sharp streaks.
+  gloss:{roughness:.22,metalness:.1,clearcoat:1,clearcoatRoughness:.02},
   matte:{roughness:.78,metalness:.02,clearcoat:0,clearcoatRoughness:1},
+  // Metallic flake under a satin coat: a soft but bright sheen along the tubes.
+  "satin-metallic":{roughness:.36,metalness:.8,clearcoat:.4,clearcoatRoughness:.3},
 };
 // Painted frame surfaces take the colorway's finish; everything else keeps its own.
 export function usePaintFinish(color:string) {
